@@ -49,9 +49,9 @@ namespace Sudoku
             this.labelNumPreEntries = new System.Windows.Forms.Label();
             this.labelSudoku_TotalEntries = new System.Windows.Forms.Label();
             this.labelSudoku = new System.Windows.Forms.Label();
-            this.labelFiveMinsSolve = new System.Windows.Forms.Label();
+            this.labelTwoMinsSolve = new System.Windows.Forms.Label();
             this.DataGridView_Sudoku = new System.Windows.Forms.DataGridView();
-            this.labelTenMinsSet = new System.Windows.Forms.Label();
+            this.labelFourMinsSet = new System.Windows.Forms.Label();
             this.linkLabelWebsite = new System.Windows.Forms.LinkLabel();
             this.comboBoxSudoku = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.DataGridView_Sudoku)).BeginInit();
@@ -131,17 +131,17 @@ namespace Sudoku
             this.labelSudoku.TabIndex = 8;
             this.labelSudoku.Text = "Sudoku";
             // 
-            // labelFiveMinsSolve
+            // labelTwoMinsSolve
             // 
-            this.labelFiveMinsSolve.AutoSize = true;
-            this.labelFiveMinsSolve.BackColor = System.Drawing.Color.DimGray;
-            this.labelFiveMinsSolve.Font = new System.Drawing.Font("Rockwell", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelFiveMinsSolve.ForeColor = System.Drawing.SystemColors.Info;
-            this.labelFiveMinsSolve.Location = new System.Drawing.Point(515, 530);
-            this.labelFiveMinsSolve.Name = "labelFiveMinsSolve";
-            this.labelFiveMinsSolve.Size = new System.Drawing.Size(124, 17);
-            this.labelFiveMinsSolve.TabIndex = 1;
-            this.labelFiveMinsSolve.Text = "Uses 2 mins max";
+            this.labelTwoMinsSolve.AutoSize = true;
+            this.labelTwoMinsSolve.BackColor = System.Drawing.Color.DimGray;
+            this.labelTwoMinsSolve.Font = new System.Drawing.Font("Rockwell", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelTwoMinsSolve.ForeColor = System.Drawing.SystemColors.Info;
+            this.labelTwoMinsSolve.Location = new System.Drawing.Point(515, 530);
+            this.labelTwoMinsSolve.Name = "labelTwoMinsSolve";
+            this.labelTwoMinsSolve.Size = new System.Drawing.Size(124, 17);
+            this.labelTwoMinsSolve.TabIndex = 1;
+            this.labelTwoMinsSolve.Text = "Uses 2 mins max";
             // 
             // DataGridView_Sudoku
             // 
@@ -189,17 +189,17 @@ namespace Sudoku
             this.DataGridView_Sudoku.Visible = false;
             this.DataGridView_Sudoku.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.DataGridView_Sudoku_CellValidating);
             // 
-            // labelTenMinsSet
+            // labelFourMinsSet
             // 
-            this.labelTenMinsSet.AutoSize = true;
-            this.labelTenMinsSet.BackColor = System.Drawing.Color.DimGray;
-            this.labelTenMinsSet.Font = new System.Drawing.Font("Rockwell", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelTenMinsSet.ForeColor = System.Drawing.SystemColors.Info;
-            this.labelTenMinsSet.Location = new System.Drawing.Point(515, 102);
-            this.labelTenMinsSet.Name = "labelTenMinsSet";
-            this.labelTenMinsSet.Size = new System.Drawing.Size(124, 17);
-            this.labelTenMinsSet.TabIndex = 4;
-            this.labelTenMinsSet.Text = "Uses 4 mins max";
+            this.labelFourMinsSet.AutoSize = true;
+            this.labelFourMinsSet.BackColor = System.Drawing.Color.DimGray;
+            this.labelFourMinsSet.Font = new System.Drawing.Font("Rockwell", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelFourMinsSet.ForeColor = System.Drawing.SystemColors.Info;
+            this.labelFourMinsSet.Location = new System.Drawing.Point(515, 102);
+            this.labelFourMinsSet.Name = "labelFourMinsSet";
+            this.labelFourMinsSet.Size = new System.Drawing.Size(124, 17);
+            this.labelFourMinsSet.TabIndex = 4;
+            this.labelFourMinsSet.Text = "Uses 4 mins max";
             // 
             // linkLabelWebsite
             // 
@@ -234,8 +234,8 @@ namespace Sudoku
             this.ClientSize = new System.Drawing.Size(643, 556);
             this.Controls.Add(this.comboBoxSudoku);
             this.Controls.Add(this.linkLabelWebsite);
-            this.Controls.Add(this.labelTenMinsSet);
-            this.Controls.Add(this.labelFiveMinsSolve);
+            this.Controls.Add(this.labelFourMinsSet);
+            this.Controls.Add(this.labelTwoMinsSolve);
             this.Controls.Add(this.labelSudoku);
             this.Controls.Add(this.labelSudoku_TotalEntries);
             this.Controls.Add(this.labelNumPreEntries);
@@ -264,9 +264,9 @@ namespace Sudoku
         private System.Windows.Forms.Label labelNumPreEntries;
         private System.Windows.Forms.Label labelSudoku_TotalEntries;
         private System.Windows.Forms.Label labelSudoku;
-        private System.Windows.Forms.Label labelFiveMinsSolve;
+        private System.Windows.Forms.Label labelTwoMinsSolve;
         public System.Windows.Forms.DataGridView DataGridView_Sudoku;
-        private System.Windows.Forms.Label labelTenMinsSet;
+        private System.Windows.Forms.Label labelFourMinsSet;
         private System.Windows.Forms.LinkLabel linkLabelWebsite;
         private System.Windows.Forms.ComboBox comboBoxSudoku;
 

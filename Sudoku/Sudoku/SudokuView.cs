@@ -146,10 +146,31 @@ namespace Sudoku
             initSudokuSizeRelatedData();
         }
 
-        private void setButtonsEnableAndVisible(bool bVal)
+        private void setControlsEnableAndVisible(bool bVal)
         {
             buttonSetBoard.Enabled = bVal;
             buttonComputerSolve.Enabled = bVal;
+
+            textBoxNumPreEntries.Enabled = bVal;
+
+            linkLabelWebsite.Enabled = bVal;
+
+            comboBoxSudoku.Enabled = bVal;
+
+            buttonSetBoard.Visible = bVal;
+            buttonComputerSolve.Visible = bVal;
+
+            textBoxNumPreEntries.Visible = bVal;
+
+            labelNumPreEntries.Visible = bVal;
+            labelNumPreEntries.Visible = bVal;
+            labelSudoku_TotalEntries.Visible = bVal;
+            labelSudoku.Visible = bVal;
+            labelTwoMinsSolve.Visible = bVal;
+            labelFourMinsSet.Visible = bVal;
+            linkLabelWebsite.Visible = bVal;
+
+            comboBoxSudoku.Visible = bVal;
         }
 
         private bool bFirstSet = true;
@@ -167,7 +188,7 @@ namespace Sudoku
                 Cursor.Current = Cursors.WaitCursor;
                 bBoardIsSet = false;
                 bSettingBoard = true;
-                setButtonsEnableAndVisible(false);
+                setControlsEnableAndVisible(false);
                 buttonSetBoard.Text = cstrSetBoardWorking;
 
                 UInt32 uiCount = 0;
@@ -223,7 +244,7 @@ namespace Sudoku
                 }
 
                 buttonSetBoard.Text = cstrSetBoard;
-                setButtonsEnableAndVisible(true);
+                setControlsEnableAndVisible(true);
                 bSettingBoard = false;
                 Cursor.Current = Cursors.Default;
             }
@@ -241,14 +262,15 @@ namespace Sudoku
             if (true == bBoardIsSet)
             {
                 Cursor.Current = Cursors.WaitCursor;
-                setButtonsEnableAndVisible(false);
+                DataGridView_Sudoku.Visible = false;
+                setControlsEnableAndVisible(false);
 
                 tSolve = new Thread(oSudoku.SolveBoard);
                 tSolve.Start();
                 WaitHandle.WaitAny(arrAREventSolve);
                 tSolve = null;
 
-                setButtonsEnableAndVisible(true);
+                setControlsEnableAndVisible(true);
                 Cursor.Current = Cursors.Default;
 
                 if (oSudoku.Solved)
@@ -261,6 +283,7 @@ namespace Sudoku
                 }
             }
 
+            DataGridView_Sudoku.Visible = true;
             arrAREventSolve[0].Set();
         }
 
