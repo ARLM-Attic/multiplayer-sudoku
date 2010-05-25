@@ -1,4 +1,4 @@
-﻿/* http://multiplayersudoku.codeplex.com/
+﻿/* http://multiplayersudoku.codeplex.com/ Version: 1.0.1.0
  * Author: Shakti Saran
  * Web-site: http://shaktisaran.tech.officelive.com/SudokuApp.aspx
  * Days: 3-4 (this program can be improved for errors, usability, performance, maintenance, reuse)

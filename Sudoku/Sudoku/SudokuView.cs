@@ -1,4 +1,4 @@
-﻿/* http://multiplayersudoku.codeplex.com/
+﻿/* http://multiplayersudoku.codeplex.com/ Version: 1.0.1.0
  * Author: Shakti Saran
  * Web-site: http://shaktisaran.tech.officelive.com/SudokuApp.aspx
  * Days: 3-4 (this program can be improved for errors, usability, performance, maintenance, reuse)
@@ -33,12 +33,6 @@ namespace Sudoku
     {
         private Sudoku oSudoku;
 
-        private AutoResetEvent[] arrAREventSet = new AutoResetEvent[1];
-        private AutoResetEvent[] arrAREventSolve = new AutoResetEvent[1];
-
-        private Thread tSolve = null;
-        private Thread tSet = null;
-
         private String strDataRangeMsg;
         private String strPreEntries;
 
@@ -54,8 +48,12 @@ namespace Sudoku
         private const String cstrComputerNotSolve = "Computer could not solve the board.\nYou may edit board and try solver again.\nYou may set the board again.";
         private const String cstrSudokuSolved = "Sudoku: Solved";
         private const String cstrSudokuNotSolved = "Sudoku: Not Solved";
-        private const String cstrSetBoardWorking = "Working...";
+
         private const String cstrSetBoard = "Set Board";
+        private const String cstrSetting = "Setting...";
+        private const String cstrComputerSolve = "Computer Solve";
+        private const String cstrSolving = "Solving...";
+
         private const String cstrBoardIsSet = "Computer has set the board.\nYou may set the board again.";
         private const String cstrBoardIsSetTitle = "Sudoku: Board Set";
         private const String cstrBoardNotSet = "Computer could not set the board.\nYou may set the board again.";
@@ -68,18 +66,10 @@ namespace Sudoku
             this.oSudoku = oSudoku;
 
             initComboBoxSudoku();
+
             initSudokuSizeFromComboBox();
+
             initSudokuSizeRelatedData();
-            initSudokuEvents();
-        }
-
-        private void initSudokuEvents()
-        {
-            arrAREventSet[0] = oSudoku.getAREventSet();
-            arrAREventSet[0].Set();
-
-            arrAREventSolve[0] = oSudoku.getAREventSolve();
-            arrAREventSolve[0].Set();
         }
 
         /* Only tested for 6x6, 9x9 */
@@ -95,8 +85,6 @@ namespace Sudoku
         {
             DataGridView_Sudoku.Visible = false;
             DataGridView_Sudoku.DataSource = null;
-
-            bBoardIsSet = false;
 
             String strSelectedItem = comboBoxSudoku.SelectedItem.ToString();
 
@@ -120,19 +108,21 @@ namespace Sudoku
             strPreEntries = "# Pre Entries:\nOnly " + cuiMinEntries + "-" + iTotalEntries + " allowed.\nEnsure no blank spaces.";
 
             labelSudoku_TotalEntries.Text = cuiMinEntries + " - " + iTotalEntries;
+
             setTextBoxNumPreEntries();
         }
 
-        private const UInt32 cuiBASE_IS_TEN = 10;
-
         private void setTextBoxNumPreEntries()
         {
+            const UInt32 cuiBASE_IS_TEN = 10;
+
             UInt32 uiMaxLength = 0;
             UInt32 uiTotalEntriesTemp = iTotalEntries;
 
             while (uiTotalEntriesTemp > 0)
             {
                 uiTotalEntriesTemp /= cuiBASE_IS_TEN;
+
                 uiMaxLength++;
             }
 
@@ -143,136 +133,136 @@ namespace Sudoku
         private void comboBoxSudoku_SelectedIndexChanged(object sender, System.EventArgs e)
         {
             initSudokuSizeFromComboBox();
+
             initSudokuSizeRelatedData();
         }
 
-        private void setControlsEnableAndVisible(bool bVal)
+        private void setControlsEnable(bool bVal)
         {
             buttonSetBoard.Enabled = bVal;
             buttonComputerSolve.Enabled = bVal;
 
             textBoxNumPreEntries.Enabled = bVal;
 
-            linkLabelWebsite.Enabled = bVal;
-
             comboBoxSudoku.Enabled = bVal;
-
-            buttonSetBoard.Visible = bVal;
-            buttonComputerSolve.Visible = bVal;
-
-            textBoxNumPreEntries.Visible = bVal;
-
-            labelNumPreEntries.Visible = bVal;
-            labelNumPreEntries.Visible = bVal;
-            labelSudoku_TotalEntries.Visible = bVal;
-            labelSudoku.Visible = bVal;
-            labelTwoMinsSolve.Visible = bVal;
-            labelFourMinsSet.Visible = bVal;
-            linkLabelWebsite.Visible = bVal;
-
-            comboBoxSudoku.Visible = bVal;
         }
 
-        private bool bFirstSet = true;
-        private bool bSettingBoard = false;
+        public delegate void delegateUpdateViewDuringSet(bool bVal);
 
-        private void buttonSetBoard_Click(object sender, EventArgs e)
+        /* bVal: use false before set, true after set */
+        public void UpdateViewDuringSet(bool bVal)
         {
-            WaitHandle.WaitAny(arrAREventSet);
-            WaitHandle.WaitAny(arrAREventSolve);
+            if (InvokeRequired)
+            {
+                BeginInvoke(new delegateUpdateViewDuringSet(UpdateViewDuringSet), new object[] { true });
 
-            const UInt32 cuiFIRST_SET_TWICE = 2;
+                return;
+            }
 
-            if (!bSettingBoard)
+            DataGridView_Sudoku.Visible = bVal;
+
+            if (bVal)
+            {
+                oSudoku.SetBoard(DataGridView_Sudoku);
+
+                DataGridView_Sudoku.Top = (ClientSize.Height - DataGridView_Sudoku.Rows.GetRowsHeight(DataGridViewElementStates.Displayed)) / 2;
+
+                FormatStartDataCells();
+
+                setControlsEnable(true);
+                buttonSetBoard.Text = cstrSetBoard;
+
+                Cursor.Current = Cursors.Default;
+            }
+            else
             {
                 Cursor.Current = Cursors.WaitCursor;
-                bBoardIsSet = false;
-                bSettingBoard = true;
-                setControlsEnableAndVisible(false);
-                buttonSetBoard.Text = cstrSetBoardWorking;
 
-                UInt32 uiCount = 0;
-                try
-                {
-                    do
-                    {
-                        DataGridView_Sudoku.Visible = false;
-                        DataGridView_Sudoku.DataSource = null;
+                buttonSetBoard.Text = cstrSetting;
+                setControlsEnable(false);
 
-                        tSet = new Thread(oSudoku.SetBoard);
-                        tSet.Start();
-                        WaitHandle.WaitAny(arrAREventSolve);
-                        WaitHandle.WaitAny(arrAREventSet);
-                        tSet = null;
+                DataGridView_Sudoku.DataSource = null;
+            }
 
-                        if (oSudoku.Solved)
-                        {
-                            oSudoku.setView(DataGridView_Sudoku);
-                            DataGridView_Sudoku.Visible = true;
-                            DataGridView_Sudoku.Top = (ClientSize.Height - DataGridView_Sudoku.Rows.GetRowsHeight(DataGridViewElementStates.Displayed)) / 2;
-                            FormatStartDataCells();
-                        }
-
-                        uiCount++;
-                    } while (bFirstSet && (uiCount < cuiFIRST_SET_TWICE));
-
-                    /* int i = (Int32)oSudoku.uiAssigned; */
-
-                    if (bFirstSet && !oSudoku.Solved)
-                    {
-                        bFirstSet = true;
-                    }
-                    else
-                    {
-                        bFirstSet = false;
-                    }
-                }
-                catch (DataException)
-                {
-                    oSudoku.Solved = false;
-                }
-
+            if (bVal)
+            {
                 if (oSudoku.Solved)
                 {
                     oSudoku.Solved = false;
-                    bBoardIsSet = true;
+
                     MessageBox.Show(cstrBoardIsSet, cstrBoardIsSetTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
                 else
                 {
                     MessageBox.Show(cstrBoardNotSet, cstrBoardNotSetTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
-
-                buttonSetBoard.Text = cstrSetBoard;
-                setControlsEnableAndVisible(true);
-                bSettingBoard = false;
-                Cursor.Current = Cursors.Default;
             }
-
-            arrAREventSolve[0].Set();
-            arrAREventSet[0].Set();
         }
 
-        private bool bBoardIsSet = false;
-
-        private void buttonComputerSolve_Click(object sender, EventArgs e)
+        private void SetBoard()
         {
-            WaitHandle.WaitAny(arrAREventSolve);
+            oSudoku.SetBoard();
 
-            if (true == bBoardIsSet)
+            UpdateViewDuringSet(true);
+        }
+
+        private void buttonSetBoard_Click(object sender, EventArgs e)
+        {
+            if (!oSudoku.SettingBoard)
+            {
+                try
+                {
+                    UpdateViewDuringSet(false);
+
+                    Thread tSet = new Thread(new ThreadStart(SetBoard));
+                    tSet.IsBackground = true;
+                    tSet.Start();
+
+                    tSet = null;
+                }
+                catch (Exception)
+                {
+                    oSudoku.Solved = false;
+
+                    buttonSetBoard.Text = cstrSetBoard;
+                    setControlsEnable(true);
+
+                    Cursor.Current = Cursors.Default;
+                }
+            }
+        }
+
+        public delegate void delegateUpdateViewDuringSolve(bool bVal);
+
+        /* bVal: use false before solve, true after solve */
+        public void UpdateViewDuringSolve(bool bVal)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new delegateUpdateViewDuringSolve(UpdateViewDuringSolve), new object[] { true });
+
+                return;
+            }
+
+            DataGridView_Sudoku.Enabled = bVal;
+
+            if (bVal)
+            {
+                setControlsEnable(true);
+                buttonComputerSolve.Text = cstrComputerSolve;
+
+                Cursor.Current = Cursors.Default;
+            }
+            else
             {
                 Cursor.Current = Cursors.WaitCursor;
-                DataGridView_Sudoku.Visible = false;
-                setControlsEnableAndVisible(false);
 
-                tSolve = new Thread(oSudoku.SolveBoard);
-                tSolve.Start();
-                WaitHandle.WaitAny(arrAREventSolve);
-                tSolve = null;
+                buttonComputerSolve.Text = cstrSolving;
+                setControlsEnable(false);
+            }
 
-                setControlsEnableAndVisible(true);
-                Cursor.Current = Cursors.Default;
-
+            if (bVal)
+            {
                 if (oSudoku.Solved)
                 {
                     MessageBox.Show(cstrComputerSolved, cstrSudokuSolved, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -282,9 +272,44 @@ namespace Sudoku
                     MessageBox.Show(cstrComputerNotSolve, cstrSudokuNotSolved, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
+        }
 
-            DataGridView_Sudoku.Visible = true;
-            arrAREventSolve[0].Set();
+        private void SolveBoard()
+        {
+            oSudoku.SolveBoard();
+
+            UpdateViewDuringSolve(true);
+        }
+
+        private void buttonComputerSolve_Click(object sender, EventArgs e)
+        {
+            if (!oSudoku.SettingBoard)
+            {
+                try
+                {
+                    UpdateViewDuringSolve(false);
+
+                    Thread tSolve = new Thread(new ThreadStart(SolveBoard));
+                    tSolve.IsBackground = true;
+                    tSolve.Start();
+
+                    tSolve = null;
+                }
+                catch (Exception)
+                {
+                    oSudoku.Solved = false;
+
+                    buttonComputerSolve.Text = cstrComputerSolve;
+                    setControlsEnable(true);
+
+                    Cursor.Current = Cursors.Default;
+                }
+            }
+        }
+
+        private void DataGridView_Sudoku_DataError(object sender, System.Windows.Forms.DataGridViewDataErrorEventArgs e)
+        {
+            //MessageBox.Show("Exception: row = " + e.RowIndex + " col = " + e.ColumnIndex + "\n\n" + e.ToString(), "DataGridView_Sudoku_DataError", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
 
         private Color[] arrBoardColors = new Color[] { Color.LightCyan, Color.LightGray, Color.LightSalmon };
@@ -319,13 +344,14 @@ namespace Sudoku
                         DataGridView_Sudoku.Rows[(Int32)uiRow].Cells[(Int32)uiCol].Style.BackColor = arrBoardColors[(iBoardColor + 2) % arrBoardColors.Length];
                     }
 
-                    if (Int32.MinValue != oSudoku.getRowColData(uiRow, uiCol))
+                    if (Int32.MinValue != oSudoku.GetRowColData(uiRow, uiCol))
                     {
                         DataGridView_Sudoku.Rows[(Int32)uiRow].Cells[(Int32)uiCol].Style.ForeColor = Color.DarkGoldenrod;
                         DataGridView_Sudoku.Rows[(Int32)uiRow].Cells[(Int32)uiCol].ReadOnly = true;
                     }
                 }
             }
+
             DataGridView_Sudoku.CurrentCell = DataGridView_Sudoku[(Int32)(uiSegment_Size * (Sudoku.cuiSEGMENTS / 2)) + 1, (Int32)(uiSegment_Size * (Sudoku.cuiSEGMENTS / 2)) + 1];
         }
 
@@ -335,19 +361,24 @@ namespace Sudoku
 
             if (e.FormattedValue.ToString() == Sudoku.cstrUNASSIGNED_VALUE)
             {
-                oSudoku.setRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+                oSudoku.SetRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+
                 e.Cancel = false;
             }
             else if (e.FormattedValue.ToString().Length == 0)
             {
                 MessageBox.Show(strDataRangeMsg, cstrErrorInvalidInput, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                oSudoku.setRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+
+                oSudoku.SetRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+
                 e.Cancel = true;
             }
             else if (!int.TryParse(e.FormattedValue.ToString(), out iRowColData) || iRowColData < Sudoku.cuiFIRST_NUM || iRowColData > oSudoku.Size)
             {
                 MessageBox.Show(strDataRangeMsg, cstrErrorInvalidInput, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                oSudoku.setRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+
+                oSudoku.SetRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+
                 e.Cancel = true;
             }
             else
@@ -359,7 +390,9 @@ namespace Sudoku
                 else
                 {
                     MessageBox.Show("Conflicting Digit: " + iRowColData, cstrErrorInvalidInput, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    oSudoku.setRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+
+                    oSudoku.SetRowColData((UInt32)e.RowIndex, (UInt32)e.ColumnIndex, Sudoku.cstrUNASSIGNED_VALUE);
+
                     e.Cancel = true;
                 }
             }
@@ -372,17 +405,21 @@ namespace Sudoku
             if (textBoxNumPreEntries.Text.Length == 0)
             {
                 textBoxNumPreEntries.Text = oSudoku.NumPreEntries.ToString();
+
                 e.Cancel = true;
             }
             else if (!int.TryParse(textBoxNumPreEntries.Text, out iPreEntries) || iPreEntries < cuiMinEntries || iPreEntries > iTotalEntries)
             {
                 MessageBox.Show(strPreEntries, cstrErrorInvalidInput, MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                 textBoxNumPreEntries.Text = oSudoku.NumPreEntries.ToString();
+
                 e.Cancel = true;
             }
             else
             {
                 oSudoku.NumPreEntries = (UInt32)iPreEntries;
+
                 e.Cancel = false;
             }
         }

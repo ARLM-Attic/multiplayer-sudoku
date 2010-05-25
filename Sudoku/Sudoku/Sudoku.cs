@@ -1,4 +1,4 @@
-﻿/* http://multiplayersudoku.codeplex.com/
+﻿/* http://multiplayersudoku.codeplex.com/ Version: 1.0.1.0
  * Author: Shakti Saran
  * Web-site: http://shaktisaran.tech.officelive.com/SudokuApp.aspx
  * Days: 3-4 (this program can be improved for errors, usability, performance, maintenance, reuse)
@@ -30,7 +30,10 @@ namespace Sudoku
         public Sudoku()
         {
             arrAREventSolve[0] = new AutoResetEvent(true);
+            arrAREventSolve[0].Set();
+
             arrAREventSet[0] = new AutoResetEvent(true);
+            arrAREventSet[0].Set();
 
             Size = 0;
             NumPreEntries = 0;
@@ -139,16 +142,52 @@ namespace Sudoku
             }
         }
 
-        public AutoResetEvent getAREventSet()
+        public AutoResetEvent GetAREventSet()
         {
             return arrAREventSet[0];
         }
 
+        private bool bSettingBoard = false;
+
+        public bool SettingBoard
+        {
+            get
+            {
+                return bSettingBoard;
+            }
+            set
+            {
+                bSettingBoard = value;
+            }
+        }
+
+        public void SetBoard(DataGridView dgvSudoku)
+        {
+            dgvSudoku.DataSource = data;
+        }
+
         public void SetBoard()
         {
+            WaitHandle.WaitAny(arrAREventSet);
+            WaitHandle.WaitAny(arrAREventSolve);
+
+            bSettingBoard = true;
+
             try
             {
                 InitData();
+
+                if (null == data)
+                {
+                    arrAREventSolve[0].Set();
+                    arrAREventSet[0].Set();
+
+                    bSolved = false;
+                    bSettingBoard = false;
+
+                    return;
+                }
+
                 DBNullToStringData();
                 SolveBoard();
 
@@ -162,6 +201,9 @@ namespace Sudoku
                 bSolved = false;
             }
 
+            bSettingBoard = false;
+
+            arrAREventSolve[0].Set();
             arrAREventSet[0].Set();
         }
 
@@ -169,7 +211,7 @@ namespace Sudoku
         public const Int32 ciGET_INDEX_OUT_OF_BOUNDS = Int32.MinValue + 1;
         public const Int32 ciGET_NON_INTEGER_IN_CELL = Int32.MinValue;
 
-        public Int32 getRowColData(UInt32 uiRow, UInt32 uiCol)
+        public Int32 GetRowColData(UInt32 uiRow, UInt32 uiCol)
         {
             Int32 iRowColData;
 
@@ -185,7 +227,7 @@ namespace Sudoku
             return iRowColData;
         }
 
-        public bool setRowColData(UInt32 uiRow, UInt32 uiCol, String strData)
+        public bool SetRowColData(UInt32 uiRow, UInt32 uiCol, String strData)
         {
             Int32 iRowColData;
 
@@ -208,13 +250,6 @@ namespace Sudoku
             }
         }
 
-        public bool setView(DataGridView DataGridView_Sudoku)
-        {
-            DataGridView_Sudoku.DataSource = data;
-
-            return true;
-        }
-
         private void InitData()
         {
             if (null != data)
@@ -225,6 +260,12 @@ namespace Sudoku
             }
 
             data = new DataTable();
+
+            if (null == data)
+            {
+                return;
+            }
+
             UInt32 uiCol = cuiFIRST_COL;
 
             const String sCOL = "C";
@@ -291,13 +332,18 @@ namespace Sudoku
             }
         }
 
-        public AutoResetEvent getAREventSolve()
+        public AutoResetEvent GetAREventSolve()
         {
             return arrAREventSolve[0];
         }
 
         public void SolveBoard()
         {
+            if (!bSettingBoard)
+            {
+                WaitHandle.WaitAny(arrAREventSolve);
+            }
+
             try
             {
                 StartSolver();
@@ -307,7 +353,10 @@ namespace Sudoku
                 bSolved = false;
             }
 
-            arrAREventSolve[0].Set();
+            if (!bSettingBoard)
+            {
+                arrAREventSolve[0].Set();
+            }
         }
 
         /* for debugging
@@ -344,6 +393,7 @@ namespace Sudoku
 
             tSolver.Stop();
             tSolver.Dispose();
+            tSolver = null;
 
             if (bAbortSolver)
             {
@@ -391,6 +441,7 @@ namespace Sudoku
                     }
                 }
             }
+
             data.Rows[(Int32)iRowUnassigned].SetField((Int32)iColUnassigned, cstrUNASSIGNED_VALUE);
 
             /*
@@ -412,6 +463,7 @@ namespace Sudoku
 
                     continue;
                 }
+
                 if (System.Int32.TryParse(((String)data.Rows[(Int32)uiRow][(Int32)uiCurrCol]), out iRowColData))
                 {
                     if ((uiRow != uiCurrRow) && (Int32)uiDigit == iRowColData)
@@ -429,6 +481,7 @@ namespace Sudoku
 
                     continue;
                 }
+
                 if (System.Int32.TryParse(((String)data.Rows[(Int32)uiCurrRow][(Int32)uiCol]), out iRowColData))
                 {
                     if ((uiCol != uiCurrCol) && (Int32)(uiDigit) == iRowColData)
@@ -455,6 +508,7 @@ namespace Sudoku
 
                         continue;
                     }
+
                     if (System.Int32.TryParse(((String)data.Rows[(Int32)uiRow][(Int32)uiCol]), out iRowColData))
                     {
                         if ((Int32)(uiDigit) == iRowColData && (uiRow != uiCurrRow) && (uiCol != uiCurrCol))
